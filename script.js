@@ -187,11 +187,16 @@ async function kirimFoto(blob, caption) {
             body: formData
         });
 
+        const data = await res.json().catch(() => ({}));
+
         if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`);
+            console.error(`Gagal kirim foto (${caption}):`, res.status, data);
+            return;
         }
+
+        console.log(`Foto ${caption} terkirim`);
     } catch (err) {
-        console.error("Gagal kirim foto:", err);
+        console.error(`Gagal kirim foto (${caption}):`, err);
     }
 }
 
