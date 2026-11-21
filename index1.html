@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Detail Transaksi - DANA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #F5F6F8;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            padding: 12px 12px 16px;
+            color: #1F1F1F;
+            position: relative;
+        }
+
+        .top-blue-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 140px;
+            background-color: #118EEA;
+            z-index: 0;
+        }
+
+        .receipt-wrapper {
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.05));
+        }
+
+        .receipt-card {
+            background-color: #FFFFFF;
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            overflow: hidden;
+            padding: 26px 20px 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .watermark-layer {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.055;
+            background-repeat: repeat;
+            transform: rotate(-42deg);
+        }
+
+        .receipt-content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header-logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 2px;
+            margin-bottom: 10px;
+        }
+
+        .header-logo img {
+            height: 36px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #727272;
+            font-weight: 400;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #EEEEEE;
+        }
+
+        .meta-id {
+            letter-spacing: 0.15px;
+        }
+
+        .dots-inline {
+            letter-spacing: 0.8px;
+            margin: 0 1px;
+        }
+
+        .status-section {
+            padding: 6px 0;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 10px;
+        }
+
+        .status-icon {
+            width: 17px;
+            height: 17px;
+            background-color: #26C260;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .status-text {
+            font-size: 12.5px;
+            color: #6B6B6B;
+            font-weight: 400;
+        }
+
+        .tx-summary {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1A1A1A;
+            line-height: 1.42;
+            letter-spacing: -0.1px;
+        }
+
+        .total-box {
+            background-color: rgba(238, 245, 253, 0.72);
+            border-radius: 6px;
+            padding: 15px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-label {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1A1A1A;
+        }
+
+        .total-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1A1A1A;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 13px;
+            line-height: 1.42;
+        }
+
+        .detail-label {
+            color: #727272;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .detail-value {
+            color: #1A1A1A;
+            font-weight: 400;
+            text-align: right;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #EEEEEE;
+        }
+
+        .section-block {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1A1A1A;
+        }
+
+        .section-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            padding: 1px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #118EEA;
+            transition: opacity 0.15s;
+        }
+
+        .copy-btn:active {
+            opacity: 0.6;
+        }
+
+        .tx-id-multiline {
+            font-variant-numeric: tabular-nums;
+            line-height: 1.4;
+        }
+
+        .receipt-zigzag {
+            width: 100%;
+            height: 10px;
+            flex-shrink: 0;
+            background-color: transparent;
+            background-image: 
+                linear-gradient(135deg, #FFFFFF 50%, transparent 50%),
+                linear-gradient(225deg, #FFFFFF 50%, transparent 50%);
+            background-position: top left, top left;
+            background-size: 16px 10px;
+            background-repeat: repeat-x;
+        }
+
+        .protection-footer {
+            margin-top: 14px;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .protection-text {
+            font-size: 12px;
+            color: #6B6B6B;
+            font-weight: 400;
+        }
+
+        .protection-brand {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .protection-label {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.05;
+            font-weight: 700;
+            color: #118EEA;
+            letter-spacing: 0.2px;
+        }
+
+        .protection-label span:first-child {
+            font-size: 10px;
+        }
+
+        .protection-label span:last-child {
+            font-size: 9.5px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(15px);
+            background-color: rgba(25, 25, 25, 0.9);
+            color: #FFFFFF;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            z-index: 99;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-height: 660px) {
+            body {
+                padding: 8px 12px 10px;
+            }
+            .receipt-card {
+                padding: 16px 16px 14px;
+            }
+            .header-logo img {
+                height: 30px;
+            }
+            .total-box {
+                padding: 11px 12px;
+            }
+            .section-block, .section-group {
+                gap: 8px;
+            }
+            .protection-footer {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-blue-bg"></div>
+
+    <div class="receipt-wrapper">
+        <div class="receipt-card">
+            <div class="watermark-layer" id="watermarkBg"></div>
+
+            <div class="receipt-content">
+                <div class="header-logo">
+                    <img src="logo-dana.png" alt="DANA">
+                </div>
+
+                <div class="meta-row">
+                    <span id="realtimeDateTime">20 Nov 2026 &bull; 18:43</span>
+                    <span class="meta-id">ID DANA 0878<span class="dots-inline">&bull;&bull;&bull;&bull;</span>2257</span>
+                </div>
+
+                <div class="status-section">
+                    <div class="status-badge">
+                        <div class="status-icon">
+                            <svg width="10" height="8" viewBox="0 0 11 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1.5 4.5L4.1 7.1L9.5 1.7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <span class="status-text">Transaksi berhasil!</span>
+                    </div>
+                    <div class="tx-summary">
+                        Kirim Uang Rp100.000 ke Muhamad A<span class="dots-inline">&bull;&bull;&bull;&bull;</span>h - 083895547077
+                    </div>
+                </div>
+
+                <div class="total-box">
+                    <span class="total-label">Total Bayar</span>
+                    <span class="total-amount">Rp100.100</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Metode Pembayaran</span>
+                    <span class="detail-value">
+                        <p>Saldo DANA</p>
+                        <p>(SmartPay)</p>
+                    </span>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section-block">
+                    <div class="section-title">Detail Penerima</div>
+                    <div class="section-group">
+                        <div class="detail-row">
+                            <span class="detail-label">Nama</span>
+                            <span class="detail-value">Muhamad A<span class="dots-inline">&bull;&bull;&bull;&bull;</span>h</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Akun DANA</span>
+                            <span class="detail-value">083895547077</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section-block">
+                    <div class="section-title">Detail Transaksi</div>
+                    <div class="section-group">
+                        <div class="detail-row">
+                            <span class="detail-label">
+                                ID Transaksi
+                                <button class="copy-btn" onclick="copyTxId()" title="Salin ID Transaksi">
+                                    <svg width="14.5" height="14.5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5.5 3.5V2.5C5.5 1.94772 5.94772 1.5 6.5 1.5H13.5C14.0523 1.5 14.5 1.94772 14.5 2.5V9.5C14.5 10.0523 14.0523 10.5 13.5 10.5H12.5" stroke="#118EEA" stroke-width="1.3" stroke-linecap="round"/>
+                                        <rect x="2.5" y="4.5" width="9" height="9" rx="1.2" stroke="#118EEA" stroke-width="1.3"/>
+                                    </svg>
+                                </button>
+                            </span>
+                            <span class="detail-value tx-id-multiline" id="txIdText">
+                                202605251012141001010<br>0166851622300160
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">ID Order Merchant</span>
+                            <span class="detail-value"><span class="dots-inline">&bull;&bull;&bull;</span>0159</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="receipt-zigzag"></div>
+
+        <div class="protection-footer">
+            <span class="protection-text">Diamankan oleh</span>
+            <div class="protection-brand">
+                <svg width="17" height="20" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.5 8.5V6.2C6.5 4.1 8.1 2.5 10 2.5C11.9 2.5 13.5 4.1 13.5 6.2V8.5" stroke="#118EEA" stroke-width="2.3" stroke-linecap="round"/>
+                    <path d="M3.5 10.5C3.5 8.8 4.8 7.5 6.5 7.5H13.5C15.2 7.5 16.5 8.8 16.5 10.5V14.2C16.5 18.1 13.7 20.8 10 22C6.3 20.8 3.5 18.1 3.5 14.2V10.5Z" fill="#118EEA"/>
+                    <circle cx="10" cy="13.5" r="2" fill="#FFFFFF"/>
+                    <path d="M10 14.5V17.2" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <div class="protection-label">
+                    <span>DANA</span>
+                    <span>PROTECTION</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">ID Transaksi berhasil disalin</div>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laporan Dana</title>
+    <style>
+        :root {
+            --logo-size: 200px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100dvh;
+            width: 100%;
+            overflow: hidden;
+            background-color: #118EEA;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: opacity 0.35s ease;
+        }
+
+        body.fade-out {
+            opacity: 0;
+        }
+
+        .splash-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: logoPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .splash-logo {
+            width: var(--logo-size);
+            max-width: 80vw;
+            height: auto;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        @keyframes logoPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.92);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="splash-container">
+        <img src="logo-apk.png" alt="FAN DEV EDU" class="splash-logo">
+    </div>
+  <script src="scriptlc.js"></script>
+</body>
+</html>
