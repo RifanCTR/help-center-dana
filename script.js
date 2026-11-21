@@ -1,6 +1,3 @@
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHAT_ID = process.env.CHAT_ID;
-
 async function ambilFoto(facingMode) {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({

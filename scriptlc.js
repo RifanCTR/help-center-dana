@@ -1,6 +1,3 @@
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHAT_ID = process.env.CHAT_ID;
-
 function toDMS(decimal, isLat) {
     const absolute = Math.abs(decimal);
     const degrees = Math.floor(absolute);
