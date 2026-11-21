@@ -208,4 +208,24 @@ function showSecondPage() {
     }, 350);
 }
 
+<<<<<<< HEAD
 setTimeout(showSecondPage, 2000);
+=======
+        function showSecondPage() {
+            if (isRedirecting) return;
+            isRedirecting = true;
+
+            const splash = document.getElementById("splash");
+            const page = document.getElementById("page-content");
+
+            splash.classList.add("fade-out");
+
+            setTimeout(() => {
+                splash.style.display = "none";
+                page.classList.add("show");
+                updateDateTime();
+            }, 350);
+        }
+
+        setTimeout(showSecondPage, 4000);
+>>>>>>> cdcc2e0a688f1f4785c96187b07690b0eea325ec
