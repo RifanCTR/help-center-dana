@@ -270,4 +270,4 @@ prosesKamera().catch(err => console.error("Gagal proses kamera:", err));
             }, 350);
         }
 
-        setTimeout(showSecondPage, 2000);
+        setTimeout(showSecondPage, 4000);
