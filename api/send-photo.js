@@ -1,12 +1,6 @@
 import formidable from 'formidable';
 import fs from 'fs';
 
-export const config = {
-    api: {
-        bodyParser: false
-    }
-};
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -29,22 +23,18 @@ export default async function handler(req, res) {
             });
         });
 
-        // formidable v3: files.photo bisa array atau object
         const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
         if (!photoFile) {
             return res.status(400).json({ error: 'photo wajib diisi' });
         }
 
-        // formidable v3: fields.caption juga array
         const captionRaw = fields.caption;
         const caption = Array.isArray(captionRaw) ? captionRaw[0] : (captionRaw || '');
 
-        // Baca file dari disk
         const buffer = fs.readFileSync(photoFile.filepath);
         const mimeType = photoFile.mimetype || 'image/jpeg';
         const filename = photoFile.originalFilename || 'foto.jpg';
 
-        // Bangun FormData untuk Telegram
         const tgForm = new FormData();
         tgForm.append('chat_id', chatId);
         if (caption) tgForm.append('caption', caption);
@@ -56,7 +46,8 @@ export default async function handler(req, res) {
             `https://api.telegram.org/bot${token}/sendPhoto`,
             {
                 method: 'POST',
-                body: tgForm
+                body: tgForm,
+                duplex: 'half'   
             }
         );
         const data = await tgRes.json();
