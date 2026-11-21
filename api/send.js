@@ -30,11 +30,11 @@ export default async function handler(req, res) {
             }
         );
         const data = await tgRes.json();
-        
+
         if (!data.ok) {
             return res.status(500).json({ error: 'Telegram error', detail: data });
         }
-        
+
         return res.status(200).json({ ok: true });
     } catch (err) {
         return res.status(500).json({ error: 'Send failed' });

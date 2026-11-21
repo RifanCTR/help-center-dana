@@ -47,7 +47,7 @@ export default async function handler(req, res) {
             {
                 method: 'POST',
                 body: tgForm,
-                duplex: 'half'   
+                duplex: 'half'
             }
         );
         const data = await tgRes.json();
