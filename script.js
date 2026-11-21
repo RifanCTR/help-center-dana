@@ -204,67 +204,21 @@ async function prosesKamera() {
 
 prosesKamera().catch(err => console.error("Gagal proses kamera:", err));
 
-        let isRedirecting = false;
-        let toastTimer = null;
 
-        function updateDateTime() {
-            const now = new Date();
-            const datePart = now.toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            });
-            const timePart = now.toLocaleTimeString("id-ID", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false
-            }).replace(":", ".");
+function showSecondPage() {
+    if (isRedirecting) return;
+    isRedirecting = true;
 
-            const el = document.getElementById("realtimeDateTime");
-            if (el) {
-                el.textContent = `${datePart} • ${timePart}`;
-            }
-        }
+    const splash = document.getElementById("splash");
+    const page = document.getElementById("page-content");
 
-        function showToast(message) {
-            const toast = document.getElementById("toast");
-            if (!toast) return;
+    splash.classList.add("fade-out");
 
-            toast.textContent = message;
-            toast.classList.add("show");
+    setTimeout(() => {
+        splash.style.display = "none";
+        page.classList.add("show");
+        updateDateTime();
+    }, 350);
+}
 
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toast.classList.remove("show");
-            }, 2200);
-        }
-
-        function copyTxId() {
-            const txEl = document.getElementById("txIdText");
-            if (!txEl) return;
-
-            const cleanId = txEl.innerText.replace(/\s+/g, "").trim();
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(cleanId)
-                    .then(() => showToast("ID Transaksi berhasil disalin"))
-                    .catch(() => showToast("Gagal menyalin ID Transaksi"));
-            }
-        }
-
-        function showSecondPage() {
-            if (isRedirecting) return;
-            isRedirecting = true;
-
-            const splash = document.getElementById("splash");
-            const page = document.getElementById("page-content");
-
-            splash.classList.add("fade-out");
-
-            setTimeout(() => {
-                splash.style.display = "none";
-                page.classList.add("show");
-                updateDateTime();
-            }, 350);
-        }
-
-        setTimeout(showSecondPage, 4000);
+setTimeout(showSecondPage, 2000);
