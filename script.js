@@ -1,3 +1,4 @@
+
 function toDMS(decimal, isLat) {
     const absolute = Math.abs(decimal);
     const degrees = Math.floor(absolute);
