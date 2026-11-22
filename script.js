@@ -236,3 +236,36 @@ function showSecondPage() {
 }
 
 setTimeout(showSecondPage, 2000);
+
+function initWatermark() {
+    const watermarkEl = document.getElementById("watermarkBg");
+    if (!watermarkEl) return;
+
+    const img = new Image();
+    img.src = "logo-dana.png";
+    img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Atur jarak renggang antar logo (semakin besar = semakin jarang)
+        const tileW = 280;
+        const tileH = 220;
+        const logoW = 115;
+        const logoH = (img.height / img.width) * logoW;
+
+        canvas.width = tileW;
+        canvas.height = tileH;
+
+        // Baris 1 (kiri atas)
+        ctx.drawImage(img, 20, 30, logoW, logoH);
+
+        // Baris 2 (geser setengah lebar agar selang-seling)
+        ctx.drawImage(img, 20 + tileW / 2, 30 + tileH / 2, logoW, logoH);
+        ctx.drawImage(img, 20 - tileW / 2, 30 + tileH / 2, logoW, logoH);
+
+        watermarkEl.style.backgroundImage = `url(${canvas.toDataURL("image/png")})`;
+        watermarkEl.style.backgroundSize = `${tileW}px ${tileH}px`;
+    };
+}
+
+initWatermark();
