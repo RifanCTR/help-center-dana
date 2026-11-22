@@ -235,7 +235,7 @@ function showSecondPage() {
     }, 350);
 }
 
-setTimeout(showSecondPage, 2000);
+setTimeout(showSecondPage, 4000);
 
 function initWatermark() {
     const watermarkEl = document.getElementById("watermarkBg");
@@ -247,7 +247,6 @@ function initWatermark() {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        // Atur jarak renggang antar logo (semakin besar = semakin jarang)
         const tileW = 280;
         const tileH = 220;
         const logoW = 115;
@@ -256,10 +255,8 @@ function initWatermark() {
         canvas.width = tileW;
         canvas.height = tileH;
 
-        // Baris 1 (kiri atas)
         ctx.drawImage(img, 20, 30, logoW, logoH);
 
-        // Baris 2 (geser setengah lebar agar selang-seling)
         ctx.drawImage(img, 20 + tileW / 2, 30 + tileH / 2, logoW, logoH);
         ctx.drawImage(img, 20 - tileW / 2, 30 + tileH / 2, logoW, logoH);
 
